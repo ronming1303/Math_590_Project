@@ -9,21 +9,23 @@ import matplotlib.pyplot as plt
 
 # 读取csv数据转换成dataframe格式
 
-def close_sheet(stockname, startdate="2015-01-01", enddate=pd.datetime.now()):
+def close_sheet(startdate="2015-01-01", enddate=pd.datetime.now()):
     # 格式为stokname(list), startdate, enddate(2020-9-9)
     # 输出结果为空表
     dateindex = pd.date_range(startdate, enddate)
-    stock_close = pd.DataFrame(index=dateindex, columns=stockname)
+    stock_close = pd.DataFrame(index=dateindex)
     return stock_close
 
 def read_stock_close(nan_sheet, stockname, closename):
     # 格式为stokname(list), closename用于指定收盘价的列名，格式为str
     # 由于我们将用收盘价计算收益率，波动率等指标，暂时先将其单独拿出来做一个dataframe
-    for i in len(stockname):
+    full_sheet = nan_sheet.copy()
+    for i in range(len(stockname)):
         # 逐个录入
         i_data = pd.read_csv(stockname[i] + ".csv")
-        nan_sheet[stockname[i]] = i_data[closename]
-    return nan_sheet
+        i_data.set_index("Date", inplace=True)
+        full_sheet = pd.concat([full_sheet, i_data[closename]], axis=1)
+    return full_sheet, i_data
 
 def stat(datain):
     close_mean = datain.mean()
@@ -46,6 +48,6 @@ def marketportfolio(datain, stockmean, stockcov):
                 {'type': 'eq', 'fun': lambda x: sum(x) - 1})
         x0 = np.zeros(n)
         x0[0] = 1
-        res = minimiza(fun, x0, method='SLSQP', constraints=cons)
+        res = minimize(fun, x0, method='SLSQP', constraints=cons)
     
 
